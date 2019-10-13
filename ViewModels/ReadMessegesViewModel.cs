@@ -24,10 +24,10 @@ namespace MyEmailService.ViewModels
         [Display(Name = "Messeges")]
         public int MessegesCount { get; set; }
 
-        [Display(Name = "Read Messeges")]
+        [Display(Name = "Read Messeges (history)")]
         public int ReadMessegesCount { get; set; }
 
-        [Display(Name = "Removed Messeges")]
+        [Display(Name = "Removed Messeges (history)")]
         public int DeletedMessegesCount { get; set; }
     }
 }

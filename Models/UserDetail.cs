@@ -1,32 +1,35 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyEmailService.Models
 {
-    public class Login
+    public class UserDetail
     {
         [Key]
-        public int LoginId { get; set; }
-        [Required]
-        public DateTime Timestamp { get; set; }
-
         [ForeignKey("User")]
         public string UserId { get; set; }
 
+        public int ReadMessegeCount { get; set; }
+
+        public int DeletedMessegeCount { get; set; }
+
         public virtual IdentityUser User { get; set; }
 
-        public Login()
+        public UserDetail()
         {
             // Required empty constructor
         }
 
-        public Login(IdentityUser user)
+        public UserDetail(IdentityUser user)
         {
-            Timestamp = DateTime.Now;
             User = user;
             UserId = user.Id;
+
         }
     }
 }

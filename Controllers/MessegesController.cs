@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using MyEmailService.Data;
 using MyEmailService.Handlers;
 using MyEmailService.Models;
@@ -18,25 +17,21 @@ namespace MyEmailService.Controllers
     [Authorize]
     public class MessegesController : Controller
     {
-        // SHOULD BE REMOVED IN FUTURE
-        private readonly ApplicationDbContext _context;
-
         private readonly UsersHandler _usersHandler;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly MessegesHandler _messagesHandler;
+        private readonly MessegesHandler _messegesHandler;
 
         public MessegesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
-            _context = context;
             _usersHandler = new UsersHandler(context);
             _userManager = userManager;
-            _messagesHandler = new MessegesHandler(context);
+            _messegesHandler = new MessegesHandler(context);
         }
 
         private async Task<List<SelectListItem>> CreateInboxUserNamesSelectionList()
         {
             var selectionList = new List<SelectListItem>();
-            List<string> names = _messagesHandler.GetSenderNamesFromInbox(await GetUserName());
+            List<string> names = _messegesHandler.GetSenderNamesFromInbox(await GetUserName());
             if (names != null)
                 foreach (string name in names)
                     selectionList.Add(new SelectListItem { Text = name, Value = name });
@@ -72,13 +67,18 @@ namespace MyEmailService.Controllers
         // Index page acts as the user inbox
         public async Task<IActionResult> Index()
         {
-            string username = await GetUserName();
-            int messegesCount = await _messagesHandler.CountReceivedUserMessegesAsync(username);
+            IdentityUser user = await _userManager.GetUserAsync(User);
+            string username = user.UserName;
+            int messegesCount = await _messegesHandler.CountReceivedUserMessegesAsync(username);
+            int readCount = await _usersHandler.GetUserReadMesseges(user);
+            int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
             ReadMessegesViewModel vm = new ReadMessegesViewModel
             {
                 Senders = await CreateInboxUserNamesSelectionList(),
                 SelectedSenders = new List<string>(),
                 MessegesCount = messegesCount,
+                ReadMessegesCount = readCount,
+                DeletedMessegesCount = deletedCount,
             };
             return View(vm);
         }
@@ -94,11 +94,14 @@ namespace MyEmailService.Controllers
             {
                 try
                 {
-                    string username = await GetUserName();
-                    int messegesCount = await _messagesHandler.CountReceivedUserMessegesAsync(username);
+                    IdentityUser user = await _userManager.GetUserAsync(User);
+                    string username = user.UserName;
+                    int messegesCount = await _messegesHandler.CountReceivedUserMessegesAsync(username);
                     string selectedSender = vm.SelectedSenders.First();
-                    List<Messege> messeges = await _messagesHandler.GetInboxMessegesFromUser(await GetUserName(), selectedSender);
+                    List<Messege> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), selectedSender);
                     List<SelectListItem> senders = await CreateInboxUserNamesSelectionList();
+                    int readCount = await _usersHandler.GetUserReadMesseges(user);
+                    int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
                     vm = new ReadMessegesViewModel
                     {
                         Senders = senders,
@@ -106,6 +109,8 @@ namespace MyEmailService.Controllers
                         SelectedSender = selectedSender,
                         Messeges = CreateMessegesViewModel(messeges),
                         MessegesCount = messegesCount,
+                        ReadMessegesCount = readCount,
+                        DeletedMessegesCount = deletedCount,
                     };
                     return View(vm);
                 } catch (Exception e)
@@ -119,13 +124,13 @@ namespace MyEmailService.Controllers
         // GET: Messeges/Received
         public async Task<IActionResult> Received()
         {
-            return View(await _messagesHandler.GetReceivedMessagesAsync(await GetUserName()));
+            return View(await _messegesHandler.GetReceivedMessagesAsync(await GetUserName()));
         }
 
         // GET: Messeges/Delivered
         public async Task<IActionResult> Delivered()
         {
-            return View(await _messagesHandler.GetDeliveredMessagesAsync(await GetUserName()));
+            return View(await _messegesHandler.GetDeliveredMessagesAsync(await GetUserName()));
         }
 
         // GET: Messeges/Read/5
@@ -134,10 +139,14 @@ namespace MyEmailService.Controllers
             if (id == null)
                 return NotFound();
             string username = await GetUserName();
-            var message = await _messagesHandler.OpenMessage(id, username);
-            if (message == null)
+            var messege = await _messegesHandler.OpenMessageAsync(id, username);
+            if (messege.WasRecentlyRead)
+            {
+                await _usersHandler.IncreaseUserReadMessegeCount(await _userManager.GetUserAsync(User));
+            }
+            if (messege == null)
                 return NotFound();
-            return View(CreateMessegeViewModel(message));
+            return View(CreateMessegeViewModel(messege));
         }
 
         private async Task<List<SelectListItem>> CreateUserNamesSelectionList()
@@ -160,7 +169,7 @@ namespace MyEmailService.Controllers
         }
 
         // GET: Messeges/Create
-        // Returns a SendMessageViewModel
+        // Returns a SendMessegeViewModel
         public async Task<IActionResult> Create()
         {
             return View(await CreateSendMessegeViewModel());
@@ -180,7 +189,7 @@ namespace MyEmailService.Controllers
                 IdentityUser user = await _userManager.GetUserAsync(User);
                 string fromUser = user.UserName;
                 string toUser = vm.SelectedReceivers.First();
-                Messege model = await _messagesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
+                Messege model = await _messegesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
                 vm = await CreateSendMessegeViewModel();
                 vm.ResponseMessege = "Messege {" + model.MessageId + "} was sent to " + model.ToUser + ", " + model.TimeSent + ".";
             }
@@ -194,15 +203,12 @@ namespace MyEmailService.Controllers
             {
                 return NotFound();
             }
-
-            var message = await _context.Messeges
-                .FirstOrDefaultAsync(m => m.MessageId == id);
-            if (message == null)
+            var messege = await _messegesHandler.GetMessege(id.HasValue ? id.Value : 0);
+            if (messege == null)
             {
                 return NotFound();
             }
-
-            return View(message);
+            return View(CreateMessegeViewModel(messege));
         }
 
         // POST: Messeges/Delete/5
@@ -210,15 +216,10 @@ namespace MyEmailService.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var message = await _context.Messeges.FindAsync(id);
-            _context.Messeges.Remove(message);
-            await _context.SaveChangesAsync();
+            IdentityUser user = await _userManager.GetUserAsync(User);
+            await _messegesHandler.DeleteMessegeAsync(id);
+            await _usersHandler.IncreaseUserDeletedMessegeCount(user);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool MessageExists(int id)
-        {
-            return _context.Messeges.Any(e => e.MessageId == id);
         }
 
         private async Task<string> GetUserName()

@@ -32,16 +32,30 @@ namespace MyEmailService.Handlers
             return message;
         }
 
-        public async Task<Messege> OpenMessage(int? id, String username)
+        public async Task<Messege> OpenMessageAsync(int? id, string username)
         {
-            Messege message = await _context.Messeges.FirstOrDefaultAsync(m => m.MessageId == id);
-            if (message.ToUser == username && message.MessegeState == MessegeState.Unread)
+            Messege messege = await _context.Messeges.FirstOrDefaultAsync(m => m.MessageId == id);
+            if (messege.ToUser == username && messege.MessegeState == MessegeState.Unread)
             {
-                message.MessegeState = MessegeState.Read;
-                _context.Update(message);
+                messege.MessegeState = MessegeState.Read;
+                _context.Update(messege);
                 await _context.SaveChangesAsync();
+                messege.WasRecentlyRead = true;
             }
-            return message;
+            return messege;
+        }
+
+        public async Task<Messege> GetMessege(int id)
+        {
+            return await _context.Messeges
+                .FirstOrDefaultAsync(m => m.MessageId == id);
+        }
+
+        public async Task DeleteMessegeAsync(int id)
+        {
+            var message = await _context.Messeges.FindAsync(id);
+            _context.Messeges.Remove(message);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<Messege>> GetAllMessagesAsync()
@@ -81,7 +95,7 @@ namespace MyEmailService.Handlers
             return (await _context.Messeges.Where(m => m.ToUser == username).ToListAsync()).Count();
         }
 
-        public Boolean MessageExists(int id)
+        public bool MessageExists(int id)
         {
             return _context.Messeges.Any(e => e.MessageId == id);
         }

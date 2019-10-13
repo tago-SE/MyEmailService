@@ -36,5 +36,8 @@ namespace MyEmailService.Models
 
         public MessegeState MessegeState { get; set; }
 
+        [NotMapped]
+        public bool WasRecentlyRead { get; set; }
+
     }
 }

@@ -59,6 +59,47 @@ namespace MyEmailService.Handlers
             return userLogins.Count();
         }
 
+        private async Task<UserDetail> GetUserDetail(IdentityUser user)
+        {
+            string userId = user.Id;
+            UserDetail detail = await _context.UserDetails.Where(d => d.UserId == userId).SingleOrDefaultAsync();
+            if (detail == null)
+            {
+                detail = new UserDetail(user);
+                _context.Add(detail);
+                await _context.SaveChangesAsync();
+            }
+            return detail;
+        }
+
+        public async Task IncreaseUserReadMessegeCount(IdentityUser user)
+        {
+            UserDetail detail = await GetUserDetail(user);
+            detail.ReadMessegeCount++;
+            _context.Update(detail);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task IncreaseUserDeletedMessegeCount(IdentityUser user)
+        {
+            UserDetail detail = await GetUserDetail(user);
+            detail.DeletedMessegeCount++;
+            _context.Update(detail);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> GetUserReadMesseges(IdentityUser user)
+        {
+            UserDetail detail = await GetUserDetail(user);
+            return detail.ReadMessegeCount;
+        }
+
+        public async Task<int> GetUserDeletedMesseges(IdentityUser user)
+        {
+            UserDetail detail = await GetUserDetail(user);
+            return detail.DeletedMessegeCount;
+        }
+
         public Task<List<string>> GetUserNames()
         {
             return _context.Users.Select(u => u.UserName).ToListAsync();
