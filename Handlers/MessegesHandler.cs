@@ -17,7 +17,7 @@ namespace MyEmailService.Handlers
             _context = context;
         }
 
-        public async Task SendMessageAsync(String fromUser, String toUser, String title, String content)
+        public async Task<Messege> SendMessageAsync(String fromUser, String toUser, String title, String content)
         {
             Messege message = new Messege
             {
@@ -29,6 +29,7 @@ namespace MyEmailService.Handlers
             };
             _context.Add(message);
             await _context.SaveChangesAsync();
+            return message;
         }
 
         public async Task<Messege> OpenMessage(int? id, String username)

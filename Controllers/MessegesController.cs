@@ -63,9 +63,7 @@ namespace MyEmailService.Controllers
             return View(message);
         }
 
-        // GET: Messeges/Create
-        // Returns a SendMessageViewModel
-        public IActionResult Create()
+        private SendMessegeViewModel CreateSendMessegeViewModel()
         {
             List<string> names = _usersHandler.GetUserNames();
             var selectionList = new List<SelectListItem>();
@@ -76,11 +74,18 @@ namespace MyEmailService.Controllers
                     selectionList.Add(new SelectListItem { Text = name, Value = name });
                 }
             }
-            SendMessageViewModel model = new SendMessageViewModel
+            SendMessegeViewModel vm = new SendMessegeViewModel
             {
                 Receivers = selectionList,
             };
-            return View(model);
+            return vm;
+        }
+
+        // GET: Messeges/Create
+        // Returns a SendMessageViewModel
+        public IActionResult Create()
+        {
+            return View(CreateSendMessegeViewModel());
         }
 
         // POST: Messeges/Create
@@ -89,13 +94,19 @@ namespace MyEmailService.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SendMessageViewModel model)
+        public async Task<IActionResult> Create(SendMessegeViewModel vm)
         {
-            IdentityUser user = await _userManager.GetUserAsync(User);
-            string fromUser = user.UserName;
-            string toUser = model.SelectedReceivers.First();
-            await _messagesHandler.SendMessageAsync(fromUser, toUser, model.Title, model.Content);
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                ModelState.Clear(); 
+                IdentityUser user = await _userManager.GetUserAsync(User);
+                string fromUser = user.UserName;
+                string toUser = vm.SelectedReceivers.First();
+                Messege model = await _messagesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
+                vm = CreateSendMessegeViewModel();
+                vm.ResponseMessege = "Messege {" + model.MessageId + "} was sent to " + model.ToUser + ", " + model.TimeSent + ".";
+            }
+            return View(vm);
         }
 
         // GET: Messeges/Edit/5

@@ -1,4 +1,4 @@
-﻿@model MyEmailService.ViewModels.SendMessageViewModel
+﻿@model MyEmailService.ViewModels.SendMessegeViewModel
 
 @{
 
@@ -9,27 +9,28 @@
 <h1>Create</h1>
 <h4>Message</h4>
 <hr />
+@Html.DisplayTextFor(model => model.ResponseMessege)
+<hr />
 
 @ViewBag.Display
 @using (Html.BeginForm())
 {
     @Html.AntiForgeryToken()
     @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-
     <div class="form-group">
         @Html.LabelFor(model => model.Receivers, htmlAttributes: new { @class = "..." })
-        <br />
+        <br>
         @Html.ListBoxFor(model => model.SelectedReceivers, Model.Receivers)
     </div>
     <div class="form-group">
         @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "..." })
-        <br />
+        <br>
         @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "..." } })
     </div>
     <div class="form-group">
 
         @Html.LabelFor(model => model.Content, htmlAttributes: new { @class = "..." })
-        <br />
+        <br>
         @Html.TextAreaFor(model => model.Content, 10, 80, null)
     </div>
     <div class="form-group">

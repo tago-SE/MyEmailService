@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MyEmailService.ViewModels
 {
-    public class SendMessageViewModel
+    public class SendMessegeViewModel
     {
         [Required]
         [Display(Name = "Title")]
@@ -22,5 +22,8 @@ namespace MyEmailService.ViewModels
 
         [Required]
         public List<string> SelectedReceivers { get; set; }
+
+        public string ResponseMessege { get; set; }
+
     }
 }
