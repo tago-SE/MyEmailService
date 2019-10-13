@@ -1,8 +1,18 @@
-﻿@{
+﻿@model MyEmailService.ViewModels.UserHomeViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
+        <br>
+        Welcome  @Html.DisplayFor(model => model.Username)
+        <br><br>
+        Last Login: @Html.DisplayFor(model => model.LastLogin)
+        <br><br>
+        Logins this month: @Html.DisplayFor(model => model.NumLoginsThisMonth)
+        <br><br>
+        You have @Html.DisplayFor(model => model.NumUnreadMessages) unread message(s).
+        <br><br>
+
+    </div>
