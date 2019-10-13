@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace MyEmailService.Models
 {
-    public enum MessageState
+    public enum MessegeState
     {
         Unread,
         Read,
         Deleted
     }
 
-    public class Message
+    public class Messege
     {
         [Key]
         public int MessageId { get; set; }
@@ -34,11 +34,7 @@ namespace MyEmailService.Models
         [Required]
         public string ToUser { get; set; }
 
-        public MessageState MessageState { get; set; }
+        public MessegeState MessegeState { get; set; }
 
-        public void read()
-        {
-            //MessageState = MessageStates.
-        }
     }
 }

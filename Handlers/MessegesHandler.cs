@@ -19,7 +19,7 @@ namespace MyEmailService.Handlers
 
         public async Task SendMessageAsync(String fromUser, String toUser, String title, String content)
         {
-            Message message = new Message
+            Messege message = new Messege
             {
                 TimeSent = DateTime.Now,
                 Title = title,
@@ -31,31 +31,35 @@ namespace MyEmailService.Handlers
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Message> OpenMessage(int? id, String username)
+        public async Task<Messege> OpenMessage(int? id, String username)
         {
-            Message message = await _context.Messages.FirstOrDefaultAsync(m => m.MessageId == id);
-            if (message.ToUser == username && message.MessageState == MessageState.Unread)
+            Messege message = await _context.Messeges.FirstOrDefaultAsync(m => m.MessageId == id);
+            if (message.ToUser == username && message.MessegeState == MessegeState.Unread)
             {
-                message.MessageState = MessageState.Read;
+                message.MessegeState = MessegeState.Read;
                 _context.Update(message);
                 await _context.SaveChangesAsync();
             }
             return message;
         }
 
-        public async Task<List<Message>> GetAllMessagesAsync()
+        public async Task<List<Messege>> GetAllMessagesAsync()
         {
-            return await _context.Messages.ToListAsync();
+            return await _context.Messeges.ToListAsync();
         }
 
-        public List<Message> GetAllMessages()
+        public async Task<List<Messege>> GetReceivedMessagesAsync(string username)
         {
-            return _context.Messages.ToList();
+            return await _context.Messeges.Where(m => m.ToUser == username).ToListAsync();
+        }
+        public async Task<List<Messege>> GetDeliveredMessagesAsync(string username)
+        {
+            return await _context.Messeges.Where(m => m.FromUser == username).ToListAsync();
         }
 
         public Boolean MessageExists(int id)
         {
-            return _context.Messages.Any(e => e.MessageId == id);
+            return _context.Messeges.Any(e => e.MessageId == id);
         }
 
     }

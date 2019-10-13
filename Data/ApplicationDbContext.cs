@@ -9,7 +9,7 @@ namespace MyEmailService.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-        public DbSet<Message> Messages { get; set; }
+        public DbSet<Messege> Messeges { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

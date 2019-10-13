@@ -28,7 +28,17 @@ namespace MyEmailService.Controllers
             return View();
         }
 
-         
+        public IActionResult ReceivedMessages()
+        {
+            return Redirect("/Messeges/Received");
+        }
+
+        public IActionResult DeliveredMesseges()
+        {
+            return Redirect("/Messeges/Delivered");
+        }
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

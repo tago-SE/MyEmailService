@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +11,11 @@ using MyEmailService.Handlers;
 using MyEmailService.Models;
 using MyEmailService.ViewModels;
 
+
 namespace MyEmailService.Controllers
 {
     [Authorize]
-    public class MessagesController : Controller
+    public class MessegesController : Controller
     {
         // SHOULD BE REMOVED IN FUTURE
         private readonly ApplicationDbContext _context;
@@ -25,7 +24,7 @@ namespace MyEmailService.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly MessegesHandler _messagesHandler;
 
-        public MessagesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public MessegesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _usersHandler = new UsersHandler(context);
@@ -33,13 +32,26 @@ namespace MyEmailService.Controllers
             _messagesHandler = new MessegesHandler(context);
         }
 
-        // GET: Messages
+        // GET: Messeges
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Messages.ToListAsync());
+            return View(await _messagesHandler.GetAllMessagesAsync());
         }
 
-        // GET: Messages/Details/5
+        // GET: Messeges/Received
+        public async Task<IActionResult> Received()
+        {
+            return View(await _messagesHandler.GetReceivedMessagesAsync(await GetUserName()));
+        }
+
+        // GET: Messeges/Delivered
+        public async Task<IActionResult> Delivered()
+        {
+            return View(await _messagesHandler.GetDeliveredMessagesAsync(await GetUserName()));
+        }
+
+
+        // GET: Messeges/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -51,7 +63,7 @@ namespace MyEmailService.Controllers
             return View(message);
         }
 
-        // GET: Messages/Create
+        // GET: Messeges/Create
         // Returns a SendMessageViewModel
         public IActionResult Create()
         {
@@ -71,7 +83,7 @@ namespace MyEmailService.Controllers
             return View(model);
         }
 
-        // POST: Messages/Create
+        // POST: Messeges/Create
         // Sends the message
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -86,23 +98,23 @@ namespace MyEmailService.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Messages/Edit/5
+        // GET: Messeges/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
                 return NotFound();
-            var message = await _context.Messages.FindAsync(id);
+            var message = await _context.Messeges.FindAsync(id);
             if (message == null)
                 return NotFound();
             return View(message);
         }
 
-        // POST: Messages/Edit/5
+        // POST: Messeges/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MessageId,TimeSent,Title,Content,FromUser,ToUser,MessageState")] Message message)
+        public async Task<IActionResult> Edit(int id, [Bind("MessageId,TimeSent,Title,Content,FromUser,ToUser,MessageState")] Messege message)
         {
             if (id != message.MessageId)
             {
@@ -132,7 +144,7 @@ namespace MyEmailService.Controllers
             return View(message);
         }
 
-        // GET: Messages/Delete/5
+        // GET: Messeges/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -140,7 +152,7 @@ namespace MyEmailService.Controllers
                 return NotFound();
             }
 
-            var message = await _context.Messages
+            var message = await _context.Messeges
                 .FirstOrDefaultAsync(m => m.MessageId == id);
             if (message == null)
             {
@@ -150,20 +162,20 @@ namespace MyEmailService.Controllers
             return View(message);
         }
 
-        // POST: Messages/Delete/5
+        // POST: Messeges/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var message = await _context.Messages.FindAsync(id);
-            _context.Messages.Remove(message);
+            var message = await _context.Messeges.FindAsync(id);
+            _context.Messeges.Remove(message);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool MessageExists(int id)
         {
-            return _context.Messages.Any(e => e.MessageId == id);
+            return _context.Messeges.Any(e => e.MessageId == id);
         }
 
         private async Task<string> GetUserName()
@@ -171,6 +183,5 @@ namespace MyEmailService.Controllers
             IdentityUser user = await _userManager.GetUserAsync(User);
             return user.UserName;
         }
-    
     }
 }
