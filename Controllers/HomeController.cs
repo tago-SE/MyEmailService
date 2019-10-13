@@ -36,12 +36,16 @@ namespace MyEmailService.Controllers
         public async Task<IActionResult> Index()
         {
             IdentityUser user = await _userManager.GetUserAsync(User);
+            DateTime lastLogin = await _usersHandler.GetPreviousLoginAttempt(user);
+            int numLoginsThisMonth = await _usersHandler.GetNumLoginsThisMonth(user);
             string username = user.UserName;
             int numUnread = await _messagesHandler.CountUserUnreadMessegesAsync(username);
             UserHomeViewModel vm = new UserHomeViewModel
             {
                 Username = user.UserName,
-                NumUnreadMessages = numUnread
+                NumUnreadMessages = numUnread,
+                LastLogin = lastLogin,
+                NumLoginsThisMonth = numLoginsThisMonth
             };
             return View(vm);
         }
@@ -60,8 +64,6 @@ namespace MyEmailService.Controllers
         {
             return Redirect("/Messeges/Delivered");
         }
-
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

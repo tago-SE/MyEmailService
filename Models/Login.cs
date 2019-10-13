@@ -20,6 +20,11 @@ namespace MyEmailService.Models
         [ForeignKey("UserId")]
         public virtual IdentityUser User { get; set; }
 
+        public Login()
+        {
+            // Empty constructor
+        }
+
         public Login(IdentityUser user)
         {
             Timestamp = DateTime.Now;
