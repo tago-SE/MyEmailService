@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -32,10 +33,87 @@ namespace MyEmailService.Controllers
             _messagesHandler = new MessegesHandler(context);
         }
 
+        private async Task<List<SelectListItem>> CreateInboxUserNamesSelectionList()
+        {
+            var selectionList = new List<SelectListItem>();
+            List<string> names = _messagesHandler.GetSenderNamesFromInbox(await GetUserName());
+            if (names != null)
+                foreach (string name in names)
+                    selectionList.Add(new SelectListItem { Text = name, Value = name });
+            return selectionList;
+        }
+
+        private MessegeViewModel CreateMessegeViewModel(Messege model)
+        {
+            return new MessegeViewModel
+            {
+                Id = model.MessageId,
+                Title = model.Title,
+                Content = model.Content,
+                TimeSent = model.TimeSent,
+                MessegeState = model.MessegeState,
+                FromUser = model.FromUser,
+                ToUser = model.ToUser,
+            };
+        }
+
+        private List<MessegeViewModel> CreateMessegesViewModel(List<Messege> models)
+        {
+            List<MessegeViewModel> viewModels = new List<MessegeViewModel>();
+            foreach (Messege model in models)
+            {
+                viewModels.Add(CreateMessegeViewModel(model));
+            }
+            return viewModels;
+        }
+
+        // Index
         // GET: Messeges
+        // Index page acts as the user inbox
         public async Task<IActionResult> Index()
         {
-            return View(await _messagesHandler.GetAllMessagesAsync());
+            string username = await GetUserName();
+            int messegesCount = await _messagesHandler.CountReceivedUserMessegesAsync(username);
+            ReadMessegesViewModel vm = new ReadMessegesViewModel
+            {
+                Senders = await CreateInboxUserNamesSelectionList(),
+                SelectedSenders = new List<string>(),
+                MessegesCount = messegesCount,
+            };
+            return View(vm);
+        }
+
+        // Index
+        // Post: Messeges
+        // Queries sent messeges from a selected user
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(ReadMessegesViewModel vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    string username = await GetUserName();
+                    int messegesCount = await _messagesHandler.CountReceivedUserMessegesAsync(username);
+                    string selectedSender = vm.SelectedSenders.First();
+                    List<Messege> messeges = await _messagesHandler.GetInboxMessegesFromUser(await GetUserName(), selectedSender);
+                    List<SelectListItem> senders = await CreateInboxUserNamesSelectionList();
+                    vm = new ReadMessegesViewModel
+                    {
+                        Senders = senders,
+                        SelectedSenders = new List<string>(),
+                        SelectedSender = selectedSender,
+                        Messeges = CreateMessegesViewModel(messeges),
+                        MessegesCount = messegesCount,
+                    };
+                    return View(vm);
+                } catch (Exception e)
+                {
+                   // Dummy catch-exception
+                }
+            }
+            return await Index();
         }
 
         // GET: Messeges/Received
@@ -50,9 +128,8 @@ namespace MyEmailService.Controllers
             return View(await _messagesHandler.GetDeliveredMessagesAsync(await GetUserName()));
         }
 
-
-        // GET: Messeges/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Messeges/Read/5
+        public async Task<IActionResult> Read(int? id)
         {
             if (id == null)
                 return NotFound();
@@ -60,32 +137,33 @@ namespace MyEmailService.Controllers
             var message = await _messagesHandler.OpenMessage(id, username);
             if (message == null)
                 return NotFound();
-            return View(message);
+            return View(CreateMessegeViewModel(message));
         }
 
-        private SendMessegeViewModel CreateSendMessegeViewModel()
+        private async Task<List<SelectListItem>> CreateUserNamesSelectionList()
         {
-            List<string> names = _usersHandler.GetUserNames();
             var selectionList = new List<SelectListItem>();
+            List<string> names = await _usersHandler.GetUserNames();
             if (names != null)
-            {
                 foreach (string name in names)
-                {
                     selectionList.Add(new SelectListItem { Text = name, Value = name });
-                }
-            }
+            return selectionList;
+        }
+  
+        private async Task<SendMessegeViewModel> CreateSendMessegeViewModel()
+        {
             SendMessegeViewModel vm = new SendMessegeViewModel
             {
-                Receivers = selectionList,
+                Receivers = await CreateUserNamesSelectionList(),
             };
             return vm;
         }
 
         // GET: Messeges/Create
         // Returns a SendMessageViewModel
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(CreateSendMessegeViewModel());
+            return View(await CreateSendMessegeViewModel());
         }
 
         // POST: Messeges/Create
@@ -103,56 +181,10 @@ namespace MyEmailService.Controllers
                 string fromUser = user.UserName;
                 string toUser = vm.SelectedReceivers.First();
                 Messege model = await _messagesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
-                vm = CreateSendMessegeViewModel();
+                vm = await CreateSendMessegeViewModel();
                 vm.ResponseMessege = "Messege {" + model.MessageId + "} was sent to " + model.ToUser + ", " + model.TimeSent + ".";
             }
             return View(vm);
-        }
-
-        // GET: Messeges/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-                return NotFound();
-            var message = await _context.Messeges.FindAsync(id);
-            if (message == null)
-                return NotFound();
-            return View(message);
-        }
-
-        // POST: Messeges/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MessageId,TimeSent,Title,Content,FromUser,ToUser,MessageState")] Messege message)
-        {
-            if (id != message.MessageId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(message);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MessageExists(message.MessageId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(message);
         }
 
         // GET: Messeges/Delete/5

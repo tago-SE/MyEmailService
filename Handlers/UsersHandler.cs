@@ -59,9 +59,9 @@ namespace MyEmailService.Handlers
             return userLogins.Count();
         }
 
-        public List<string> GetUserNames()
+        public Task<List<string>> GetUserNames()
         {
-            return _context.Users.Select(u => u.UserName).ToList();
+            return _context.Users.Select(u => u.UserName).ToListAsync();
         }
 
     }

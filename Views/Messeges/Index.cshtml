@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MyEmailService.Models.Messege>
+﻿@model MyEmailService.ViewModels.ReadMessegesViewModel
 
 @{
     ViewData["Title"] = "Index";
@@ -7,35 +7,47 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<hr />
+@ViewBag.Display
+@using (Html.BeginForm())
+{
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="form-group">
+    @Html.LabelFor(model => model.Senders, htmlAttributes: new { @class = "..." })
+    <br>
+    @Html.ListBoxFor(model => model.SelectedSenders, Model.Senders)
+</div>
+<div class="form-group">
+    <input type="submit" value="Query" class="btn btn-primary" />
+</div>
+}
+
+<hr/>
+@Html.LabelFor(model => model.SelectedSender): @Html.DisplayTextFor(model => model.SelectedSender)
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.TimeSent)
+                Sent
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Title)
+                Title
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Content)
+                Status
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FromUser)
+                <!-- Empty for action links -->
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ToUser)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MessegeState)
-            </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+    @if(Model.Messeges != null)
+    {
+        @foreach (var item in Model.Messeges)
+        {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.TimeSent)
@@ -44,23 +56,26 @@
                 @Html.DisplayFor(modelItem => item.Title)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FromUser)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ToUser)
-            </td>
-            <td>
                 @Html.DisplayFor(modelItem => item.MessegeState)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.MessageId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.MessageId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.MessageId">Delete</a>
+                <a asp-action="Read" asp-route-id="@item.Id">Read</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
-}
+        }
+    }
     </tbody>
 </table>
+
+
+<hr />
+@Html.DisplayNameFor(model => model.MessegesCount):
+@Html.DisplayFor(model => model.MessegesCount),
+@Html.DisplayNameFor(model => model.ReadMessegesCount):
+@Html.DisplayFor(model => model.ReadMessegesCount),
+@Html.DisplayNameFor(model => model.DeletedMessegesCount):
+@Html.DisplayFor(model => model.DeletedMessegesCount).
+
+
+

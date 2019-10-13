@@ -58,12 +58,27 @@ namespace MyEmailService.Handlers
             return await _context.Messeges.Where(m => m.FromUser == username).ToListAsync();
         }
 
+        public async Task<List<Messege>> GetInboxMessegesFromUser(string inboxUser, string fromUser)
+        {
+            return await _context.Messeges.Where(m => m.FromUser == fromUser && m.ToUser == inboxUser).ToListAsync();
+        }
+
+        public List<string> GetSenderNamesFromInbox(string inboxUser)
+        {
+            return _context.Messeges.Select(m => m.FromUser).ToList().Distinct().ToList();
+        }
+
         public async Task<int> CountUserUnreadMessegesAsync(string username)
         {
             List<Messege> messeges = await _context.Messeges.Where(
-                m => m.FromUser == username &&
+                m => m.ToUser == username &&
                 m.MessegeState == MessegeState.Unread).ToListAsync();
             return messeges.Count();
+        }
+
+        public async Task<int> CountReceivedUserMessegesAsync(string username)
+        {
+            return (await _context.Messeges.Where(m => m.ToUser == username).ToListAsync()).Count();
         }
 
         public Boolean MessageExists(int id)

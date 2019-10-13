@@ -8,9 +8,14 @@
 
 <h1>Create</h1>
 <h4>Message</h4>
-<hr />
-@Html.DisplayTextFor(model => model.ResponseMessege)
-<hr />
+
+
+@if (Model.ResponseMessege != null)
+{
+    <hr />
+    @Html.DisplayTextFor(model => model.ResponseMessege)
+    <hr />
+}
 
 @ViewBag.Display
 @using (Html.BeginForm())

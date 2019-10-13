@@ -55,14 +55,14 @@ namespace MyEmailService.Controllers
             return View();
         }
 
-        public IActionResult ReceivedMessages()
+        public IActionResult SendMessege()
         {
-            return Redirect("/Messeges/Received");
+            return Redirect("/Messeges/Create");
         }
 
-        public IActionResult DeliveredMesseges()
+        public IActionResult ReadMesseges()
         {
-            return Redirect("/Messeges/Delivered");
+            return Redirect("/Messeges");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

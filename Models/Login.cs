@@ -22,7 +22,7 @@ namespace MyEmailService.Models
 
         public Login()
         {
-            // Empty constructor
+            // Required empty constructor
         }
 
         public Login(IdentityUser user)
