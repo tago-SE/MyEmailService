@@ -28,10 +28,10 @@ namespace MyEmailService.Controllers
             _messegesHandler = new MessegesHandler(context);
         }
 
-        private async Task<List<SelectListItem>> CreateInboxUserNamesSelectionList()
+        private async Task<List<SelectListItem>> CreateInboxUserNamesSelectionList(string username)
         {
             var selectionList = new List<SelectListItem>();
-            List<string> names = _messegesHandler.GetSenderNamesFromInbox(await GetUserName());
+            List<string> names = await _messegesHandler.GetSenderNamesFromInbox(username);
             if (names != null)
                 foreach (string name in names)
                     selectionList.Add(new SelectListItem { Text = name, Value = name });
@@ -74,7 +74,7 @@ namespace MyEmailService.Controllers
             int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
             ReadMessegesViewModel vm = new ReadMessegesViewModel
             {
-                Senders = await CreateInboxUserNamesSelectionList(),
+                Senders = await CreateInboxUserNamesSelectionList(username),
                 SelectedSenders = new List<string>(),
                 MessegesCount = messegesCount,
                 ReadMessegesCount = readCount,
@@ -99,7 +99,7 @@ namespace MyEmailService.Controllers
                     int messegesCount = await _messegesHandler.CountReceivedUserMessegesAsync(username);
                     string selectedSender = vm.SelectedSenders.First();
                     List<Messege> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), selectedSender);
-                    List<SelectListItem> senders = await CreateInboxUserNamesSelectionList();
+                    List<SelectListItem> senders = await CreateInboxUserNamesSelectionList(username);
                     int readCount = await _usersHandler.GetUserReadMesseges(user);
                     int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
                     vm = new ReadMessegesViewModel

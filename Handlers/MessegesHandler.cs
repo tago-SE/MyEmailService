@@ -77,9 +77,18 @@ namespace MyEmailService.Handlers
             return await _context.Messeges.Where(m => m.FromUser == fromUser && m.ToUser == inboxUser).ToListAsync();
         }
 
-        public List<string> GetSenderNamesFromInbox(string inboxUser)
+        public async Task<List<string>> GetSenderNamesFromInbox(string username)
         {
-            return _context.Messeges.Select(m => m.FromUser).ToList().Distinct().ToList();
+            List<Messege> messeges = await GetReceivedMessagesAsync(username);
+            List<string> names = new List<string>();
+            foreach (Messege m in messeges)
+            {
+                if (!names.Contains(m.FromUser))
+                {
+                    names.Add(m.FromUser);
+                }
+            }
+            return names;
         }
 
         public async Task<int> CountUserUnreadMessegesAsync(string username)
