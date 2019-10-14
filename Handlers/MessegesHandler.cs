@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using MyEmailService.Data;
 using MyEmailService.Models;
 using System;
@@ -11,25 +12,37 @@ namespace MyEmailService.Handlers
     public class MessegesHandler
     {
         private readonly ApplicationDbContext _context;
+        private readonly UsersHandler _sersHandler;
 
         public MessegesHandler(ApplicationDbContext context)
         {
             _context = context;
+            _sersHandler = new UsersHandler(context);
         }
 
-        public async Task<Messege> SendMessageAsync(String fromUser, String toUser, String title, String content)
+        public async Task<Messege> SendMessageAsync(string fromUser, string toUser, String title, String content)
         {
-            Messege message = new Messege
+            IdentityUser sender = await _sersHandler.GetUserByEmailAsync(fromUser);
+            IdentityUser receiver = await _sersHandler.GetUserByEmailAsync(toUser);
+            if (sender != null && receiver != null)
             {
-                TimeSent = DateTime.Now,
-                Title = title,
-                Content = content,
-                FromUser = fromUser,
-                ToUser = toUser
-            };
-            _context.Add(message);
-            await _context.SaveChangesAsync();
-            return message;
+                Messege message = new Messege
+                {
+                    TimeSent = DateTime.Now,
+                    Title = title,
+                    Content = content,
+                    FromUser = fromUser,
+                    Sender = sender,
+                    SenderId = sender.Id,
+                    ToUser = toUser,
+                    Receiver = receiver, 
+                    ReceiverId = receiver.Id,
+                };
+                _context.Add(message);
+                await _context.SaveChangesAsync();
+                return message;
+            }
+            return null;
         }
 
         public async Task<Messege> OpenMessageAsync(int? id, string username)

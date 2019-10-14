@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -33,6 +34,16 @@ namespace MyEmailService.Models
 
         [Required]
         public string ToUser { get; set; }
+
+        [ForeignKey("Sender")]
+        public string SenderId { get; set; }
+
+        public virtual IdentityUser Sender { get; set; }
+
+        [ForeignKey("Receiver")]
+        public string ReceiverId { get; set; }
+
+        public virtual IdentityUser Receiver { get; set; }
 
         public MessegeState MessegeState { get; set; }
 
