@@ -12,18 +12,18 @@ namespace MyEmailService.Handlers
     public class MessegesHandler
     {
         private readonly ApplicationDbContext _context;
-        private readonly UsersHandler _sersHandler;
+        private readonly UsersHandler _usersHandler;
 
         public MessegesHandler(ApplicationDbContext context)
         {
             _context = context;
-            _sersHandler = new UsersHandler(context);
+            _usersHandler = new UsersHandler(context);
         }
 
         public async Task<Messege> SendMessageAsync(string fromUser, string toUser, String title, String content)
         {
-            IdentityUser sender = await _sersHandler.GetUserByEmailAsync(fromUser);
-            IdentityUser receiver = await _sersHandler.GetUserByEmailAsync(toUser);
+            IdentityUser sender = await _usersHandler.GetUserByEmailAsync(fromUser);
+            IdentityUser receiver = await _usersHandler.GetUserByEmailAsync(toUser);
             if (sender != null && receiver != null)
             {
                 Messege message = new Messege
@@ -88,6 +88,19 @@ namespace MyEmailService.Handlers
         public async Task<List<Messege>> GetInboxMessegesFromUser(string inboxUser, string fromUser)
         {
             return await _context.Messeges.Where(m => m.FromUser == fromUser && m.ToUser == inboxUser).ToListAsync();
+        }
+
+        public async Task<List<Messege>> GetInboxMessegesFromUser(string inboxUser, List<string> senders)
+        {
+            List<Messege> messeges = new List<Messege>();
+            foreach (String sender in senders)
+            {
+                foreach (Messege msg in await _context.Messeges.Where(m => m.FromUser == sender && m.ToUser == inboxUser).ToListAsync())
+                {
+                    messeges.Add(msg);
+                }
+            }
+            return messeges;
         }
 
         public async Task<List<string>> GetSenderNamesFromInbox(string username)

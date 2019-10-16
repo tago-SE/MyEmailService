@@ -98,7 +98,7 @@ namespace MyEmailService.Controllers
                     string username = user.UserName;
                     int messegesCount = await _messegesHandler.CountReceivedUserMessegesAsync(username);
                     string selectedSender = vm.SelectedSenders.First();
-                    List<Messege> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), selectedSender);
+                    List<Messege> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), vm.SelectedSenders);
                     List<SelectListItem> senders = await CreateInboxUserNamesSelectionList(username);
                     int readCount = await _usersHandler.GetUserReadMesseges(user);
                     int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
