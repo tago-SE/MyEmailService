@@ -29,7 +29,6 @@ namespace MyEmailService.Models
         {
             User = user;
             UserId = user.Id;
-
         }
     }
 }

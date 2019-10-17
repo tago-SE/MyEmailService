@@ -10,7 +10,7 @@ namespace MyEmailService.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-        public DbSet<Messege> Messeges { get; set; }
+        public DbSet<Message> Messeges { get; set; }
 
         public DbSet<Login> Logins { get; set; }
 

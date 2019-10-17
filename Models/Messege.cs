@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace MyEmailService.Models
 {
-    public enum MessegeState
+    public enum MessageState
     {
         Unread,
         Read,
         Deleted
     }
 
-    public class Messege
+    public class Message
     {
         [Key]
         public int MessageId { get; set; }
@@ -45,7 +45,7 @@ namespace MyEmailService.Models
 
         public virtual IdentityUser Receiver { get; set; }
 
-        public MessegeState MessegeState { get; set; }
+        public MessageState MessageState { get; set; }
 
         [NotMapped]
         public bool WasRecentlyRead { get; set; }

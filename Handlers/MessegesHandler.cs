@@ -20,13 +20,13 @@ namespace MyEmailService.Handlers
             _usersHandler = new UsersHandler(context);
         }
 
-        public async Task<Messege> SendMessageAsync(string fromUser, string toUser, String title, String content)
+        public async Task<Message> SendMessageAsync(string fromUser, string toUser, String title, String content)
         {
             IdentityUser sender = await _usersHandler.GetUserByEmailAsync(fromUser);
             IdentityUser receiver = await _usersHandler.GetUserByEmailAsync(toUser);
             if (sender != null && receiver != null)
             {
-                Messege message = new Messege
+                Message message = new Message
                 {
                     TimeSent = DateTime.Now,
                     Title = title,
@@ -45,12 +45,12 @@ namespace MyEmailService.Handlers
             return null;
         }
 
-        public async Task<Messege> OpenMessageAsync(int? id, string username)
+        public async Task<Message> OpenMessageAsync(int? id, string username)
         {
-            Messege messege = await _context.Messeges.FirstOrDefaultAsync(m => m.MessageId == id);
-            if (messege.ToUser == username && messege.MessegeState == MessegeState.Unread)
+            Message messege = await _context.Messeges.FirstOrDefaultAsync(m => m.MessageId == id);
+            if (messege.ToUser == username && messege.MessageState == MessageState.Unread)
             {
-                messege.MessegeState = MessegeState.Read;
+                messege.MessageState = MessageState.Read;
                 _context.Update(messege);
                 await _context.SaveChangesAsync();
                 messege.WasRecentlyRead = true;
@@ -58,7 +58,7 @@ namespace MyEmailService.Handlers
             return messege;
         }
 
-        public async Task<Messege> GetMessege(int id)
+        public async Task<Message> GetMessege(int id)
         {
             return await _context.Messeges
                 .FirstOrDefaultAsync(m => m.MessageId == id);
@@ -71,57 +71,42 @@ namespace MyEmailService.Handlers
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Messege>> GetAllMessagesAsync()
+        public async Task<List<Message>> GetAllMessagesAsync()
         {
             return await _context.Messeges.ToListAsync();
         }
 
-        public async Task<List<Messege>> GetReceivedMessagesAsync(string username)
+        public async Task<List<Message>> GetReceivedMessagesAsync(string username)
         {
             return await _context.Messeges.Where(m => m.ToUser == username).ToListAsync();
         }
-        public async Task<List<Messege>> GetDeliveredMessagesAsync(string username)
+        public async Task<List<Message>> GetDeliveredMessagesAsync(string username)
         {
             return await _context.Messeges.Where(m => m.FromUser == username).ToListAsync();
         }
 
-        public async Task<List<Messege>> GetInboxMessegesFromUser(string inboxUser, string fromUser)
+        public async Task<List<Message>> GetInboxMessegesFromUser(string inboxUser, string fromUser)
         {
             return await _context.Messeges.Where(m => m.FromUser == fromUser && m.ToUser == inboxUser).ToListAsync();
         }
 
-        public async Task<List<Messege>> GetInboxMessegesFromUser(string inboxUser, List<string> senders)
+        public async Task<List<Message>> GetInboxMessegesFromUser(string inboxUser, List<string> senders)
         {
-            List<Messege> messeges = new List<Messege>();
-            foreach (String sender in senders)
-            {
-                foreach (Messege msg in await _context.Messeges.Where(m => m.FromUser == sender && m.ToUser == inboxUser).ToListAsync())
-                {
-                    messeges.Add(msg);
-                }
-            }
-            return messeges;
+            return await _context.Messeges
+               .Where(m => m.ToUser == inboxUser && senders.Contains(m.FromUser))
+               .ToListAsync();
         }
 
         public async Task<List<string>> GetSenderNamesFromInbox(string username)
         {
-            List<Messege> messeges = await GetReceivedMessagesAsync(username);
-            List<string> names = new List<string>();
-            foreach (Messege m in messeges)
-            {
-                if (!names.Contains(m.FromUser))
-                {
-                    names.Add(m.FromUser);
-                }
-            }
-            return names;
+            return await _context.Messeges.Where(m => m.ToUser == username).Select(m => m.FromUser).Distinct().ToListAsync();
         }
 
         public async Task<int> CountUserUnreadMessegesAsync(string username)
         {
-            List<Messege> messeges = await _context.Messeges.Where(
+            List<Message> messeges = await _context.Messeges.Where(
                 m => m.ToUser == username &&
-                m.MessegeState == MessegeState.Unread).ToListAsync();
+                m.MessageState == MessageState.Unread).ToListAsync();
             return messeges.Count();
         }
 

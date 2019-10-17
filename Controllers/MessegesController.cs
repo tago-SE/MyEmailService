@@ -38,7 +38,7 @@ namespace MyEmailService.Controllers
             return selectionList;
         }
 
-        private MessegeViewModel CreateMessegeViewModel(Messege model)
+        private MessegeViewModel CreateMessegeViewModel(Message model)
         {
             return new MessegeViewModel
             {
@@ -46,16 +46,16 @@ namespace MyEmailService.Controllers
                 Title = model.Title,
                 Content = model.Content,
                 TimeSent = model.TimeSent,
-                MessegeState = model.MessegeState,
+                MessageState = model.MessageState,
                 FromUser = model.FromUser,
                 ToUser = model.ToUser,
             };
         }
 
-        private List<MessegeViewModel> CreateMessegesViewModel(List<Messege> models)
+        private List<MessegeViewModel> CreateMessegesViewModel(List<Message> models)
         {
             List<MessegeViewModel> viewModels = new List<MessegeViewModel>();
-            foreach (Messege model in models)
+            foreach (Message model in models)
             {
                 viewModels.Add(CreateMessegeViewModel(model));
             }
@@ -98,7 +98,7 @@ namespace MyEmailService.Controllers
                     string username = user.UserName;
                     int messegesCount = await _messegesHandler.CountReceivedUserMessegesAsync(username);
                     string selectedSender = vm.SelectedSenders.First();
-                    List<Messege> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), vm.SelectedSenders);
+                    List<Message> messeges = await _messegesHandler.GetInboxMessegesFromUser(await GetUserName(), vm.SelectedSenders);
                     List<SelectListItem> senders = await CreateInboxUserNamesSelectionList(username);
                     int readCount = await _usersHandler.GetUserReadMesseges(user);
                     int deletedCount = await _usersHandler.GetUserDeletedMesseges(user);
@@ -189,7 +189,7 @@ namespace MyEmailService.Controllers
                 IdentityUser user = await _userManager.GetUserAsync(User);
                 string fromUser = user.UserName;
                 string toUser = vm.SelectedReceivers.First();
-                Messege model = await _messegesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
+                Message model = await _messegesHandler.SendMessageAsync(fromUser, toUser, vm.Title, vm.Content);
                 vm = await CreateSendMessegeViewModel();
                 vm.ResponseMessege = "Messege {" + model.MessageId + "} was sent to " + model.ToUser + ", " + model.TimeSent + ".";
             }

@@ -27,7 +27,7 @@ namespace MyEmailService.ViewModels
         public string ToUser { get; set; }
 
         [Display(Name = "Status")]
-        public MessegeState MessegeState { get; set; }
+        public MessageState MessageState { get; set; }
 
     }
 }
